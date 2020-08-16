@@ -1,0 +1,53 @@
+---
+- hosts: all
+  vars:
+    ansible_host_key_checking: false
+  tasks:
+    - name: Install git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Copy deploy keys to host
+      copy:
+        src: "{{ item }}"
+        dest: "~/.ssh/"
+        mode: '600'
+      with_items:
+        - "{{ local_ssh_dir }}{{ public_key }}"
+        - "{{ local_ssh_dir }}{{ private_key }}"
+
+    - name: Check if project folder is empty (first time deploy)
+      stat:
+        path: "{{ server_directory }}"
+      register: project_directory
+
+    - name: Create server directory if it does not exist
+      file:
+        path: "{{ server_directory }}"
+        state: directory
+      when: project_directory.stat.exists == false
+
+    # See: https://stackoverflow.com/a/37096534/100134
+    - name: Ensure setfacl support is present.
+      package: name=acl
+
+    - name: If first time deploy clone the project
+      git:
+        repo: "{{ git_repo_url }}"
+        dest: "{{ server_directory }}"
+        accept_hostkey: yes
+        key_file: "/root/.ssh/{{ private_key }}"
+        version: "{{ branch }}"
+      when: project_directory.stat.exists == false
+
+    - name: Do a git pull to update the project
+      git:
+        repo: "{{ git_repo_url }}"
+        dest: "{{ server_directory }}"
+        accept_hostkey: yes
+        key_file: "/root/.ssh/{{ private_key }}"
+        update: yes
+        version: "{{ branch_to_pull }}"
+      when: project_directory.stat.exists
