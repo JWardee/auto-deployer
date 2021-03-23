@@ -39,7 +39,7 @@ class AutoDeployerInstall extends Command
      */
     public function handle()
     {
-        $this->output('Generating keys...');
+        $this->info('Generating keys...');
 
         $rsa = new RSA;
         $rsa->setPrivateKeyFormat(RSA::PUBLIC_FORMAT_OPENSSH);
@@ -51,7 +51,7 @@ class AutoDeployerInstall extends Command
         Storage::put('ansible_rsa.pub', $keys['publickey']);
         Storage::put('ansible_rsa', $keys['privatekey']);
 
-        $this->output('Restricting permissions to keys...');
+        $this->info('Restricting permissions to keys...');
 
         chmod(storage_path('app/ansible_rsa'), 600);
 

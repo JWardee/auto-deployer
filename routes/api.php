@@ -19,20 +19,24 @@ use Illuminate\Support\Facades\Route;
 Route::post('/deploy', function(Request $request) {
     Log::info('Ping to /api/deploy');
 
-    if ($request->has('repository')) {
-        $repository = $request->input('repository');
-
-        if (isset($repository['ssh_url'])) {
-            Log::info('Valid payload getting model...');
-
-            $project = Project::where('git_repo_ssh_url', $repository['ssh_url'])->first();
-
-            if ($project == null) {
-                response('Repository not found', 404);
-            }
-
-            // TODO: Need to wrap into a job
-            $project->deploy();
-        }
+    if (!$request->has('repository')) {
+        return;
     }
+
+    $repository = $request->input('repository');
+
+    if (!isset($repository['ssh_url'])) {
+        return;
+    }
+
+    Log::info('Valid payload getting model...');
+
+    $project = Project::where('git_repo_ssh_url', $repository['ssh_url'])->first();
+
+    if ($project == null) {
+        return response('Repository not found', 404);
+    }
+
+    // TODO: Need to wrap into a job
+    $project->deploy();
 });
