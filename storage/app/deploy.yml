@@ -7,9 +7,9 @@
       command: "{{ item }}"
       with_items:
         - "{{ before_deploy_commands }}"
-      when: before_deploy_commands is defined
-      
-    - name: Install git
+      when: before_deploy_commands is defined and before_deploy_commands != null
+
+    - name: Install Git
       apt:
         name: git
         state: present
@@ -27,15 +27,6 @@
         - "{{ local_ssh_dir }}{{ public_key }}"
         - "{{ local_ssh_dir }}{{ private_key }}"
       become: yes
-
-    #- name: Update permissions of deploy keys
-    #  file:
-    #    path: "/home//.ssh/{{ item }}"
-    #    mode: '600'
-    #  with_items:
-    #    - "{{ local_ssh_dir }}{{ public_key }}"
-    #    - "{{ local_ssh_dir }}{{ private_key }}"
-    #  become: yes
 
     - name: Check if project folder is empty (first time deploy)
       stat:
@@ -80,9 +71,9 @@
         state: absent
         path: "{{ server_directory }}/git"
       when: project_directory.stat.exists == false
-      
+
     - name: Run any extra commands after deploy
       command: "{{ item }}"
       with_items:
         - "{{ after_deploy_commands }}"
-      when: after_deploy_commands is defined
+      when: after_deploy_commands is defined and after_deploy_commands != null

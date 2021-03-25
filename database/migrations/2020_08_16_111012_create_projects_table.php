@@ -19,7 +19,7 @@ class CreateProjectsTable extends Migration
             $table->string('git_repo_ssh_url');
             $table->string('branch_to_pull')->default('master');
             $table->string('server_user')->default('root');
-            $table->string('server_address');
+            $table->string('server_address')->default('~/');
             $table->string('server_directory');
             $table->mediumText('before_commands')->nullable();
             $table->mediumText('after_commands')->nullable();

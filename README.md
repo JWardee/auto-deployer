@@ -10,5 +10,4 @@
 ## TODO
 - On webhook receive deploy from a job
 - On Deploy from Nova action fire the deploy as a job
-- Implement before commands and after commands
 - Show output of deploys inside the activity logger

@@ -22,8 +22,10 @@ class Project extends Model
                 'public_key' => $this->getPublicKeyFileName(),
                 'private_key' => $this->getPrivateKeyFileName(),
                 'server_directory' => $this->server_directory,
-                'git_repo_url' => $this->git_repo_url,
+                'git_repo_url' => $this->git_repo_ssh_url,
                 'branch_to_pull' => $this->branch_to_pull,
+                'before_deploy_commands' => explode(PHP_EOL, $this->before_commands),
+                'after_deploy_commands' => explode(PHP_EOL, $this->after_commands),
             ]
         );
     }
