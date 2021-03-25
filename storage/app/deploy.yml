@@ -1,11 +1,14 @@
-  GNU nano 2.9.3                                            storage/app/deploy.yml                                                       
-
-     
 ---
 - hosts: all
   vars:
     ansible_host_key_checking: false
   tasks:
+    - name: Run any extra commands before deploy
+      command: "{{ item }}"
+      with_items:
+        - "{{ before_deploy_commands }}"
+      when: before_deploy_commands is defined
+      
     - name: Install git
       apt:
         name: git
@@ -77,3 +80,9 @@
         state: absent
         path: "{{ server_directory }}/git"
       when: project_directory.stat.exists == false
+      
+    - name: Run any extra commands after deploy
+      command: "{{ item }}"
+      with_items:
+        - "{{ after_deploy_commands }}"
+      when: after_deploy_commands is defined
