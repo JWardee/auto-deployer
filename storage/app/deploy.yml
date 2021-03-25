@@ -1,3 +1,6 @@
+  GNU nano 2.9.3                                            storage/app/deploy.yml                                                       
+
+     
 ---
 - hosts: all
   vars:
@@ -7,20 +10,33 @@
       apt:
         name: git
         state: present
-        update_cache: yes
+        update_cache: no
+      become: yes
 
     - name: Copy deploy keys to host
       copy:
         src: "{{ item }}"
-        dest: "~/.ssh/"
+        dest: "/home/{{ ansible_user }}/.ssh/"
         mode: '600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
       with_items:
         - "{{ local_ssh_dir }}{{ public_key }}"
         - "{{ local_ssh_dir }}{{ private_key }}"
+      become: yes
+
+    #- name: Update permissions of deploy keys
+    #  file:
+    #    path: "/home//.ssh/{{ item }}"
+    #    mode: '600'
+    #  with_items:
+    #    - "{{ local_ssh_dir }}{{ public_key }}"
+    #    - "{{ local_ssh_dir }}{{ private_key }}"
+    #  become: yes
 
     - name: Check if project folder is empty (first time deploy)
       stat:
-        path: "{{ server_directory }}"
+        path: "{{ server_directory }}/.git"
       register: project_directory
 
     - name: Create server directory if it does not exist
@@ -36,10 +52,10 @@
     - name: If first time deploy clone the project
       git:
         repo: "{{ git_repo_url }}"
-        dest: "{{ server_directory }}"
+        dest: "{{ server_directory }}/git"
         accept_hostkey: yes
-        key_file: "/root/.ssh/{{ private_key }}"
-        version: "{{ branch }}"
+        key_file: "~/.ssh/{{ private_key }}"
+        version: "{{ branch_to_pull }}"
       when: project_directory.stat.exists == false
 
     - name: Do a git pull to update the project
@@ -47,7 +63,17 @@
         repo: "{{ git_repo_url }}"
         dest: "{{ server_directory }}"
         accept_hostkey: yes
-        key_file: "/root/.ssh/{{ private_key }}"
+        key_file: "~/.ssh/{{ private_key }}"
         update: yes
         version: "{{ branch_to_pull }}"
       when: project_directory.stat.exists
+
+    - name: Move cloned files to upper directory
+      command: cp -r {{ server_directory }}/git/. {{ server_directory }}/
+      when: project_directory.stat.exists == false
+
+    - name: Delete cloned repo
+      file:
+        state: absent
+        path: "{{ server_directory }}/git"
+      when: project_directory.stat.exists == false
