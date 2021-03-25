@@ -12,21 +12,29 @@ class Project extends Model
 
     public function deploy()
     {
+        $args = [
+            'local_ssh_dir' => $this->storageSshDir,
+            'public_key' => $this->getPublicKeyFileName(),
+            'private_key' => $this->getPrivateKeyFileName(),
+            'server_directory' => $this->server_directory,
+            'git_repo_url' => $this->git_repo_ssh_url,
+            'branch_to_pull' => $this->branch_to_pull,
+        ];
+
+        if ($this->before_commands != null) {
+            $args['before_deploy_commands'] = explode(PHP_EOL, $this->before_commands);
+        }
+
+        if ($this->after_commands != null) {
+            $args['after_deploy_commands'] = explode(PHP_EOL, $this->after_commands);
+        }
+
         return Ansible::run(
             $this->server_address,
             storage_path('app/deploy.yml'),
             storage_path('app/ansible_rsa'),
             $this->server_user,
-            [
-                'local_ssh_dir' => $this->storageSshDir,
-                'public_key' => $this->getPublicKeyFileName(),
-                'private_key' => $this->getPrivateKeyFileName(),
-                'server_directory' => $this->server_directory,
-                'git_repo_url' => $this->git_repo_ssh_url,
-                'branch_to_pull' => $this->branch_to_pull,
-                'before_deploy_commands' => explode(PHP_EOL, $this->before_commands),
-                'after_deploy_commands' => explode(PHP_EOL, $this->after_commands),
-            ]
+            $args
         );
     }
 
